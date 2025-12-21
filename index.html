@@ -48,57 +48,51 @@
       </div>
     </div>
 
-    <!-- Category Management Modal -->
-    <div class="modal" id="category-modal" style="display: none;">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>Manage Categories</h3>
-          <button class="close-btn" id="close-category-modal">&times;</button>
-        </div>
-        <div class="modal-body">
-          <button class="btn btn-primary" id="add-category-btn">Add New Category</button>
-          <div class="category-list" id="category-list">
-            <!-- Categories will be listed here -->
-          </div>
+    <!-- Category Management Panel -->
+    <div class="management-panel" id="category-management" style="display: none;">
+      <div class="panel-header">
+        <h3>Manage Categories</h3>
+        <button class="close-btn" id="close-category-management">&times;</button>
+      </div>
+      <div class="panel-body">
+        <button class="btn btn-primary" id="add-category-btn">Add New Category</button>
+        <div class="category-list" id="category-list">
+          <!-- Categories will be listed here -->
         </div>
       </div>
     </div>
 
-    <!-- Task Management Modal -->
-    <div class="modal" id="task-modal" style="display: none;">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3 id="task-modal-title">Manage Tasks</h3>
-          <button class="close-btn" id="close-task-modal">&times;</button>
-        </div>
-        <div class="modal-body">
-          <button class="btn btn-primary" id="add-task-btn">Add New Task</button>
-          <div class="task-list" id="task-list">
-            <!-- Tasks will be listed here -->
-          </div>
+    <!-- Task Management Panel -->
+    <div class="management-panel" id="task-management" style="display: none;">
+      <div class="panel-header">
+        <h3 id="task-management-title">Manage Tasks</h3>
+        <button class="close-btn" id="close-task-management">&times;</button>
+      </div>
+      <div class="panel-body">
+        <button class="btn btn-primary" id="add-task-btn">Add New Task</button>
+        <div class="task-list" id="task-list">
+          <!-- Tasks will be listed here -->
         </div>
       </div>
     </div>
 
-    <!-- Add/Edit Form Modal -->
-    <div class="modal" id="form-modal" style="display: none;">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3 id="form-modal-title">Add Item</h3>
-          <button class="close-btn" id="close-form-modal">&times;</button>
-        </div>
-        <div class="modal-body">
-          <form id="item-form">
-            <div class="form-group">
-              <label for="item-name">Name:</label>
-              <input type="text" id="item-name" required>
-            </div>
-            <div class="form-actions">
-              <button type="button" class="btn btn-secondary" id="cancel-form-btn">Cancel</button>
-              <button type="submit" class="btn btn-primary">Save</button>
-            </div>
-          </form>
-        </div>
+    <!-- Add/Edit Form Panel -->
+    <div class="management-panel" id="form-panel" style="display: none;">
+      <div class="panel-header">
+        <h3 id="form-panel-title">Add Item</h3>
+        <button class="close-btn" id="close-form-panel">&times;</button>
+      </div>
+      <div class="panel-body">
+        <form id="item-form">
+          <div class="form-group">
+            <label for="item-name">Name:</label>
+            <input type="text" id="item-name" required>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" id="cancel-form-btn">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>

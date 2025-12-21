@@ -11,7 +11,7 @@ const resetBtn = document.getElementById('reset-btn');
 const exportBtn = document.getElementById('export-btn');
 
 // Modal elements - will be set in setupEventListeners
-let manageCategoriesBtn, manageTasksBtn, categoryModal, taskModal, formModal, closeCategoryModal, closeTaskModal, closeFormModal, addCategoryBtn, addTaskBtn, categoryList, taskList, itemForm, itemNameInput, formModalTitle, taskModalTitle, cancelFormBtn;
+let manageCategoriesBtn, manageTasksBtn, categoryManagement, taskManagement, formPanel, closeCategoryManagement, closeTaskManagement, closeFormPanel, addCategoryBtn, addTaskBtn, categoryList, taskList, itemForm, itemNameInput, formPanelTitle, taskManagementTitle, cancelFormBtn;
 
 // Current state
 let currentCategory = null;
@@ -32,20 +32,20 @@ function setupEventListeners() {
   // Get modal elements
   manageCategoriesBtn = document.getElementById('manage-categories-btn');
   manageTasksBtn = document.getElementById('manage-tasks-btn');
-  categoryModal = document.getElementById('category-modal');
-  taskModal = document.getElementById('task-modal');
-  formModal = document.getElementById('form-modal');
-  closeCategoryModal = document.getElementById('close-category-modal');
-  closeTaskModal = document.getElementById('close-task-modal');
-  closeFormModal = document.getElementById('close-form-modal');
+  categoryManagement = document.getElementById('category-management');
+  taskManagement = document.getElementById('task-management');
+  formPanel = document.getElementById('form-panel');
+  closeCategoryManagement = document.getElementById('close-category-management');
+  closeTaskManagement = document.getElementById('close-task-management');
+  closeFormPanel = document.getElementById('close-form-panel');
   addCategoryBtn = document.getElementById('add-category-btn');
   addTaskBtn = document.getElementById('add-task-btn');
   categoryList = document.getElementById('category-list');
   taskList = document.getElementById('task-list');
   itemForm = document.getElementById('item-form');
   itemNameInput = document.getElementById('item-name');
-  formModalTitle = document.getElementById('form-modal-title');
-  taskModalTitle = document.getElementById('task-modal-title');
+  formPanelTitle = document.getElementById('form-panel-title');
+  taskManagementTitle = document.getElementById('task-management-title');
   cancelFormBtn = document.getElementById('cancel-form-btn');
 
   if (!manageCategoriesBtn) {
@@ -78,23 +78,23 @@ function setupEventListeners() {
   exportBtn.addEventListener('click', exportToCSV);
 
   // Manage categories button
-  manageCategoriesBtn.addEventListener('click', openCategoryModal);
+  manageCategoriesBtn.addEventListener('click', openCategoryManagement);
 
   // Manage tasks button
-  manageTasksBtn.addEventListener('click', openTaskModal);
+  manageTasksBtn.addEventListener('click', openTaskManagement);
 
-  // Modal close buttons
-  closeCategoryModal.addEventListener('click', () => closeModal(categoryModal));
-  closeTaskModal.addEventListener('click', () => closeModal(taskModal));
-  closeFormModal.addEventListener('click', () => closeModal(formModal));
+  // Close buttons
+  closeCategoryManagement.addEventListener('click', () => closePanel(categoryManagement));
+  closeTaskManagement.addEventListener('click', () => closePanel(taskManagement));
+  closeFormPanel.addEventListener('click', () => closePanel(formPanel));
 
   // Add buttons
-  addCategoryBtn.addEventListener('click', () => openFormModal('category'));
-  addTaskBtn.addEventListener('click', () => openFormModal('task'));
+  addCategoryBtn.addEventListener('click', () => openFormPanel('category'));
+  addTaskBtn.addEventListener('click', () => openFormPanel('task'));
 
   // Form handling
   itemForm.addEventListener('submit', handleFormSubmit);
-  cancelFormBtn.addEventListener('click', () => closeModal(formModal));
+  cancelFormBtn.addEventListener('click', () => closePanel(formPanel));
 
   // Close modals when clicking outside
   [categoryModal, taskModal, formModal].forEach(modal => {
@@ -132,20 +132,30 @@ function saveChecklistData() {
   localStorage.setItem('checklistData', JSON.stringify(checklistData));
 }
 
-// Modal management
-function openModal(modal) {
-  modal.style.display = 'flex';
+// Panel management
+function openPanel(panel) {
+  panel.style.display = 'block';
 }
 
-function closeModal(modal) {
-  modal.style.display = 'none';
+function closePanel(panel) {
+  panel.style.display = 'none';
   editingItem = null;
 }
 
 // Category management
-function openCategoryModal() {
+function openCategoryManagement() {
   renderCategoryList();
-  openModal(categoryModal);
+  openPanel(categoryManagement);
+}
+
+function openTaskManagement() {
+  if (!currentCategory) {
+    alert('Please select a category first.');
+    return;
+  }
+  taskManagementTitle.textContent = `Manage Tasks - ${checklistData[currentCategory].name}`;
+  renderTaskList();
+  openPanel(taskManagement);
 }
 
 function renderCategoryList() {
@@ -180,8 +190,8 @@ function handleCategoryAction(e) {
 function editCategory(key) {
   editingItem = { type: 'category', key };
   itemNameInput.value = checklistData[key].name;
-  formModalTitle.textContent = 'Edit Category';
-  openModal(formModal);
+  formPanelTitle.textContent = 'Edit Category';
+  openPanel(formPanel);
 }
 
 function deleteCategory(key) {
@@ -198,14 +208,14 @@ function deleteCategory(key) {
 }
 
 // Task management
-function openTaskModal() {
+function openTaskManagement() {
   if (!currentCategory) {
     alert('Please select a category first.');
     return;
   }
-  taskModalTitle.textContent = `Manage Tasks - ${checklistData[currentCategory].name}`;
+  taskManagementTitle.textContent = `Manage Tasks - ${checklistData[currentCategory].name}`;
   renderTaskList();
-  openModal(taskModal);
+  openPanel(taskManagement);
 }
 
 function renderTaskList() {
@@ -239,8 +249,8 @@ function handleTaskAction(e) {
 function editTask(index) {
   editingItem = { type: 'task', key: currentCategory, index };
   itemNameInput.value = checklistData[currentCategory].items[index];
-  formModalTitle.textContent = 'Edit Task';
-  openModal(formModal);
+  formPanelTitle.textContent = 'Edit Task';
+  openPanel(formPanel);
 }
 
 function deleteTask(index) {
@@ -258,11 +268,11 @@ function deleteTask(index) {
 }
 
 // Form handling
-function openFormModal(type) {
+function openFormPanel(type) {
   editingItem = { type };
   itemNameInput.value = '';
-  formModalTitle.textContent = type === 'category' ? 'Add Category' : 'Add Task';
-  openModal(formModal);
+  formPanelTitle.textContent = type === 'category' ? 'Add Category' : 'Add Task';
+  openPanel(formPanel);
   itemNameInput.focus();
 }
 
@@ -308,7 +318,7 @@ function handleFormSubmit(e) {
     saveToLocalStorage();
   }
 
-  closeModal(formModal);
+  closePanel(formPanel);
 }
 
 // Select a checklist category
