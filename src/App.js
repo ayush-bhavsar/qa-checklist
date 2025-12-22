@@ -8,8 +8,10 @@ function App() {
   const [showCategoryManagement, setShowCategoryManagement] = useState(false);
   const [showTaskManagement, setShowTaskManagement] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [formData, setFormData] = useState('');
+  const [focusedTaskIndex, setFocusedTaskIndex] = useState(-1);
 
   // Load checklist data from localStorage or use defaults
   useEffect(() => {
@@ -64,6 +66,7 @@ function App() {
   // Select a checklist category
   const selectCategory = (categoryKey) => {
     setCurrentCategory(categoryKey);
+    setFocusedTaskIndex(0); // Focus first task when category changes
     setShowTaskManagement(false);
     setShowForm(false);
   };
@@ -246,11 +249,138 @@ function App() {
     saveStateToLocalStorage();
   }, [checkedItems, currentCategory]);
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Don't trigger shortcuts when typing in inputs
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      const isCtrlOrCmd = e.ctrlKey || e.metaKey;
+      const isShift = e.shiftKey;
+
+      switch (e.key) {
+        case 'Enter':
+        case ' ':
+          if (!isCtrlOrCmd && currentCategory && focusedTaskIndex >= 0) {
+            e.preventDefault();
+            const task = checklistData[currentCategory].items[focusedTaskIndex];
+            if (task) {
+              handleCheckboxChange(task, !checkedItems[task]);
+            }
+          }
+          break;
+
+        case 'ArrowUp':
+          if (!isCtrlOrCmd && currentCategory && checklistData[currentCategory].items.length > 0) {
+            e.preventDefault();
+            setFocusedTaskIndex(prev => 
+              prev > 0 ? prev - 1 : checklistData[currentCategory].items.length - 1
+            );
+          }
+          break;
+
+        case 'ArrowDown':
+          if (!isCtrlOrCmd && currentCategory && checklistData[currentCategory].items.length > 0) {
+            e.preventDefault();
+            setFocusedTaskIndex(prev => 
+              prev < checklistData[currentCategory].items.length - 1 ? prev + 1 : 0
+            );
+          }
+          break;
+
+        case 'n':
+        case 'N':
+          if (isCtrlOrCmd && !isShift) {
+            e.preventDefault();
+            if (currentCategory) {
+              openForm('task');
+            }
+          }
+          break;
+
+        case 'e':
+        case 'E':
+          if (isCtrlOrCmd && !isShift && currentCategory && focusedTaskIndex >= 0) {
+            e.preventDefault();
+            editTask(focusedTaskIndex);
+          }
+          break;
+
+        case 'd':
+        case 'D':
+          if (isCtrlOrCmd && !isShift && currentCategory && focusedTaskIndex >= 0) {
+            e.preventDefault();
+            deleteTask(focusedTaskIndex);
+          }
+          break;
+
+        case 'r':
+        case 'R':
+          if (isCtrlOrCmd && !isShift) {
+            e.preventDefault();
+            resetChecklist();
+          }
+          break;
+
+        case 's':
+        case 'S':
+          if (isCtrlOrCmd && !isShift) {
+            e.preventDefault();
+            exportToCSV();
+          }
+          break;
+
+        case 'm':
+        case 'M':
+          if (isCtrlOrCmd && !isShift) {
+            e.preventDefault();
+            openTaskManagement();
+          } else if (isCtrlOrCmd && isShift) {
+            e.preventDefault();
+            openCategoryManagement();
+          }
+          break;
+
+        case '/':
+          if (isCtrlOrCmd) {
+            e.preventDefault();
+            setShowShortcutsHelp(true);
+          }
+          break;
+
+        case 'Escape':
+          if (showForm) {
+            closeForm();
+          } else if (showTaskManagement) {
+            closeTaskManagement();
+          } else if (showCategoryManagement) {
+            closeCategoryManagement();
+          } else if (showShortcutsHelp) {
+            setShowShortcutsHelp(false);
+          }
+          break;
+
+        default:
+          break;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [currentCategory, focusedTaskIndex, checkedItems, checklistData, showForm, showTaskManagement, showCategoryManagement, showShortcutsHelp]);
+
   return (
     <div className="container">
       <header>
         <h1>QA Checklist Tool</h1>
         <p>Track your testing progress with ease</p>
+        <div className="shortcuts-hint">
+          <button className="btn btn-small btn-secondary" onClick={() => setShowShortcutsHelp(true)}>
+            ⌨️ Shortcuts
+          </button>
+        </div>
       </header>
 
       <div className="category-selector">
@@ -316,7 +446,11 @@ function App() {
 
           <div className="checklist-items">
             {checklistData[currentCategory].items.map((item, index) => (
-              <div key={index} className="checklist-item">
+              <div 
+                key={index} 
+                className={`checklist-item ${focusedTaskIndex === index ? 'focused' : ''}`}
+                onClick={() => setFocusedTaskIndex(index)}
+              >
                 <input
                   type="checkbox"
                   id={`item-${index}`}
@@ -398,6 +532,65 @@ function App() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {showShortcutsHelp && (
+        <div className="shortcuts-panel">
+          <div className="panel-header">
+            <h3>Keyboard Shortcuts</h3>
+            <button className="close-btn" onClick={() => setShowShortcutsHelp(false)}>&times;</button>
+          </div>
+          <div className="panel-body">
+            <div className="shortcuts-section">
+              <h4>Navigation</h4>
+              <div className="shortcut-item">
+                <kbd>↑</kbd> <kbd>↓</kbd> <span>Navigate between tasks</span>
+              </div>
+              <div className="shortcut-item">
+                <kbd>Space</kbd> <span>Toggle task completion</span>
+              </div>
+            </div>
+            
+            <div className="shortcuts-section">
+              <h4>Actions</h4>
+              <div className="shortcut-item">
+                <kbd>Ctrl</kbd> + <kbd>N</kbd> <span>Add new task</span>
+              </div>
+              <div className="shortcut-item">
+                <kbd>Ctrl</kbd> + <kbd>E</kbd> <span>Edit focused task</span>
+              </div>
+              <div className="shortcut-item">
+                <kbd>Ctrl</kbd> + <kbd>D</kbd> <span>Delete focused task</span>
+              </div>
+              <div className="shortcut-item">
+                <kbd>Ctrl</kbd> + <kbd>R</kbd> <span>Reset checklist</span>
+              </div>
+              <div className="shortcut-item">
+                <kbd>Ctrl</kbd> + <kbd>S</kbd> <span>Export as CSV</span>
+              </div>
+            </div>
+            
+            <div className="shortcuts-section">
+              <h4>Management</h4>
+              <div className="shortcut-item">
+                <kbd>Ctrl</kbd> + <kbd>M</kbd> <span>Manage tasks</span>
+              </div>
+              <div className="shortcut-item">
+                <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>M</kbd> <span>Manage categories</span>
+              </div>
+            </div>
+            
+            <div className="shortcuts-section">
+              <h4>General</h4>
+              <div className="shortcut-item">
+                <kbd>Ctrl</kbd> + <kbd>/</kbd> <span>Show this help</span>
+              </div>
+              <div className="shortcut-item">
+                <kbd>Esc</kbd> <span>Close panels/forms</span>
+              </div>
+            </div>
           </div>
         </div>
       )}

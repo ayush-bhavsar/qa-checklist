@@ -36,6 +36,10 @@ header p {
   color: #6b7280;
 }
 
+.shortcuts-hint {
+  margin-top: 1rem;
+}
+
 .category-selector {
   background: white;
   padding: 2rem;
@@ -144,6 +148,12 @@ header p {
 
 .checklist-item:hover {
   background-color: #f3f4f6;
+}
+
+.checklist-item.focused {
+  background-color: #dbeafe;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
 }
 
 .checklist-item input[type="checkbox"] {
@@ -347,6 +357,54 @@ header p {
   gap: 1rem;
   justify-content: flex-end;
   margin-top: 1rem;
+}
+
+/* Shortcuts Panel */
+.shortcuts-panel {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-top: 2rem;
+  overflow: hidden;
+}
+
+.shortcuts-section {
+  margin-bottom: 1.5rem;
+}
+
+.shortcuts-section h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 0.25rem;
+}
+
+.shortcut-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  background-color: #f9fafb;
+  border-radius: 6px;
+}
+
+.shortcut-item kbd {
+  background-color: #e5e7eb;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  font-family: monospace;
+  color: #374151;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.shortcut-item span {
+  color: #6b7280;
+  font-size: 0.875rem;
 }
 
 /* Responsive */
