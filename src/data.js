@@ -1,6 +1,6 @@
 // data.js - Default checklist data for QA Checklist Tool
 
-const defaultChecklistData = {
+export const defaultChecklistData = {
   smoke: {
     name: "Smoke Testing",
     items: [
@@ -77,6 +77,3 @@ const defaultChecklistData = {
     ]
   }
 };
-
-// Export the default data
-window.defaultChecklistData = defaultChecklistData;
