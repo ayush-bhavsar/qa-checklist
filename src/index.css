@@ -645,3 +645,17 @@ header p {
   font-size: 0.875em;
   color: inherit;
 }
+
+/* Test Automation Classes */
+.test-category-selector { /* For category selector section */ }
+.test-category-button { /* For individual category buttons */ }
+.test-checklist-item { /* For checklist items */ }
+.test-checkbox { /* For checkboxes */ }
+.test-management-panel { /* For management panels */ }
+.test-form-input { /* For form inputs */ }
+.test-action-button { /* For action buttons */ }
+.test-timer-display { /* For timer display */ }
+.test-progress-bar { /* For progress bars */ }
+.test-modal-overlay { /* For modal overlays */ }
+.test-shortcuts-panel { /* For shortcuts help panel */ }
+.test-productivity-panel { /* For productivity analytics panel */ }

@@ -569,40 +569,40 @@ function App() {
   }, [isSessionActive, lastBreakTime]);
 
   return (
-    <div className="container">
-      <header>
-        <h1>QA Checklist Tool</h1>
-        <p>Track your testing progress with ease</p>
+    <div className="container" data-testid="qa-checklist-app">
+      <header data-testid="app-header">
+        <h1 data-testid="app-title">QA Checklist Tool</h1>
+        <p data-testid="app-subtitle">Track your testing progress with ease</p>
         <div className="shortcuts-hint">
-          <button className="btn btn-small btn-secondary" onClick={() => setShowShortcutsHelp(true)}>
+          <button className="btn btn-small btn-secondary" onClick={() => setShowShortcutsHelp(true)} data-testid="shortcuts-button">
             <span className="icon-keyboard"></span> Shortcuts
           </button>
         </div>
-        <div className="session-timer">
+        <div className="session-timer" data-testid="session-timer">
           <div className="timer-display">
-            <span className="timer-label">Session:</span>
-            <span className={`timer-value ${isSessionActive ? 'active' : ''}`}>
+            <span className="timer-label" data-testid="timer-label">Session:</span>
+            <span className={`timer-value ${isSessionActive ? 'active' : ''}`} data-testid="timer-value">
               {formatTime(getCurrentSessionTime())}
             </span>
           </div>
-          <div className="timer-controls">
+          <div className="timer-controls" data-testid="timer-controls">
             {!isSessionActive ? (
-              <button className="btn btn-small btn-success" onClick={startSession}>
+              <button className="btn btn-small btn-success" onClick={startSession} data-testid="start-session-btn">
                 <span className="icon-play"></span> Start
               </button>
             ) : (
-              <button className="btn btn-small btn-danger" onClick={stopSession}>
+              <button className="btn btn-small btn-danger" onClick={stopSession} data-testid="stop-session-btn">
                 <span className="icon-stop"></span> Stop
               </button>
             )}
-            <button className="btn btn-small btn-warning" onClick={resetSession}>
+            <button className="btn btn-small btn-warning" onClick={resetSession} data-testid="reset-session-btn">
               <span className="icon-reset"></span> Reset
             </button>
-            <button className="btn btn-small btn-info" onClick={() => setShowProductivityPanel(true)}>
+            <button className="btn btn-small btn-info" onClick={() => setShowProductivityPanel(true)} data-testid="stats-btn">
               <span className="icon-stats"></span> Stats
             </button>
             {shouldTakeBreak() && (
-              <button className="btn btn-small btn-primary" onClick={takeBreak}>
+              <button className="btn btn-small btn-primary" onClick={takeBreak} data-testid="break-btn">
                 <span className="icon-coffee"></span> Break
               </button>
             )}
@@ -610,19 +610,20 @@ function App() {
         </div>
       </header>
 
-      <div className="category-selector">
+      <div className="category-selector" data-testid="category-selector">
         <div className="category-header">
-          <h2>Select Checklist Category</h2>
-          <button className="btn btn-secondary" onClick={openCategoryManagement}>
+          <h2 data-testid="category-selector-title">Select Checklist Category</h2>
+          <button className="btn btn-secondary" onClick={openCategoryManagement} data-testid="manage-categories-btn">
             Manage Categories
           </button>
         </div>
-        <div className="category-buttons">
+        <div className="category-buttons" data-testid="category-buttons">
           {Object.keys(checklistData).map(categoryKey => (
             <button
               key={categoryKey}
               className={`category-btn ${currentCategory === categoryKey ? 'active' : ''}`}
               onClick={() => selectCategory(categoryKey)}
+              data-testid={`category-btn-${categoryKey}`}
             >
               {checklistData[categoryKey].name}
             </button>
@@ -631,24 +632,24 @@ function App() {
       </div>
 
       {showCategoryManagement && (
-        <div className="management-panel">
+        <div className="management-panel" data-testid="category-management-panel">
           <div className="panel-header">
-            <h3>Manage Categories</h3>
-            <button className="close-btn" onClick={closeCategoryManagement}>&times;</button>
+            <h3 data-testid="category-panel-title">Manage Categories</h3>
+            <button className="close-btn" onClick={closeCategoryManagement} data-testid="close-category-panel-btn">&times;</button>
           </div>
           <div className="panel-body">
-            <button className="btn btn-primary" onClick={() => openForm('category')}>
+            <button className="btn btn-primary" onClick={() => openForm('category')} data-testid="add-category-btn">
               Add New Category
             </button>
-            <div className="category-list">
+            <div className="category-list" data-testid="category-list">
               {Object.keys(checklistData).map(key => (
-                <div key={key} className="category-item">
-                  <span className="category-name">{checklistData[key].name}</span>
+                <div key={key} className="category-item" data-testid={`category-item-${key}`}>
+                  <span className="category-name" data-testid={`category-name-${key}`}>{checklistData[key].name}</span>
                   <div className="category-actions">
-                    <button className="btn btn-small btn-edit" onClick={() => editCategory(key)}>
+                    <button className="btn btn-small btn-edit" onClick={() => editCategory(key)} data-testid={`edit-category-btn-${key}`}>
                       Edit
                     </button>
-                    <button className="btn btn-small btn-delete" onClick={() => deleteCategory(key)}>
+                    <button className="btn btn-small btn-delete" onClick={() => deleteCategory(key)} data-testid={`delete-category-btn-${key}`}>
                       Delete
                     </button>
                   </div>
@@ -660,43 +661,45 @@ function App() {
       )}
 
       {currentCategory && (
-        <div className="checklist-section">
+        <div className="checklist-section" data-testid="checklist-section">
           <div className="checklist-header">
-            <h2>{checklistData[currentCategory].name}</h2>
-            <div className="progress-container">
-              <div className="progress-bar">
-                <div className="progress-fill" style={{ width: `${getProgress()}%` }}></div>
+            <h2 data-testid="checklist-title">{checklistData[currentCategory].name}</h2>
+            <div className="progress-container" data-testid="progress-container">
+              <div className="progress-bar" data-testid="progress-bar">
+                <div className="progress-fill" style={{ width: `${getProgress()}%` }} data-testid="progress-fill"></div>
               </div>
-              <span className="progress-text">Progress: {getProgress()}%</span>
+              <span className="progress-text" data-testid="progress-text">Progress: {getProgress()}%</span>
             </div>
           </div>
 
-          <div className="checklist-items">
+          <div className="checklist-items" data-testid="checklist-items">
             {checklistData[currentCategory].items.map((item, index) => (
-              <div 
-                key={index} 
+              <div
+                key={index}
                 className={`checklist-item ${focusedTaskIndex === index ? 'focused' : ''}`}
                 onClick={() => setFocusedTaskIndex(index)}
+                data-testid={`checklist-item-${index}`}
               >
                 <input
                   type="checkbox"
                   id={`item-${index}`}
                   checked={checkedItems[item] || false}
                   onChange={(e) => handleCheckboxChange(item, e.target.checked)}
+                  data-testid={`checklist-checkbox-${index}`}
                 />
-                <label htmlFor={`item-${index}`}>{item}</label>
+                <label htmlFor={`item-${index}`} data-testid={`checklist-label-${index}`}>{item}</label>
               </div>
             ))}
           </div>
 
-          <div className="actions">
-            <button className="btn btn-secondary" onClick={resetChecklist}>
+          <div className="actions" data-testid="checklist-actions">
+            <button className="btn btn-secondary" onClick={resetChecklist} data-testid="reset-checklist-btn">
               Reset Checklist
             </button>
-            <button className="btn btn-secondary" onClick={openTaskManagement}>
+            <button className="btn btn-secondary" onClick={openTaskManagement} data-testid="manage-tasks-btn">
               Manage Tasks
             </button>
-            <button className="btn btn-primary" onClick={exportToCSV}>
+            <button className="btn btn-primary" onClick={exportToCSV} data-testid="export-csv-btn">
               Export as CSV
             </button>
           </div>
@@ -704,24 +707,24 @@ function App() {
       )}
 
       {showTaskManagement && currentCategory && (
-        <div className="management-panel">
+        <div className="management-panel" data-testid="task-management-panel">
           <div className="panel-header">
-            <h3>Manage Tasks - {checklistData[currentCategory].name}</h3>
-            <button className="close-btn" onClick={closeTaskManagement}>&times;</button>
+            <h3 data-testid="task-panel-title">Manage Tasks - {checklistData[currentCategory].name}</h3>
+            <button className="close-btn" onClick={closeTaskManagement} data-testid="close-task-panel-btn">&times;</button>
           </div>
           <div className="panel-body">
-            <button className="btn btn-primary" onClick={() => openForm('task')}>
+            <button className="btn btn-primary" onClick={() => openForm('task')} data-testid="add-task-btn">
               Add New Task
             </button>
-            <div className="task-list">
+            <div className="task-list" data-testid="task-list">
               {checklistData[currentCategory].items.map((task, index) => (
-                <div key={index} className="task-item">
-                  <span className="task-name">{task}</span>
+                <div key={index} className="task-item" data-testid={`task-item-${index}`}>
+                  <span className="task-name" data-testid={`task-name-${index}`}>{task}</span>
                   <div className="task-actions">
-                    <button className="btn btn-small btn-edit" onClick={() => editTask(index)}>
+                    <button className="btn btn-small btn-edit" onClick={() => editTask(index)} data-testid={`edit-task-btn-${index}`}>
                       Edit
                     </button>
-                    <button className="btn btn-small btn-delete" onClick={() => deleteTask(index)}>
+                    <button className="btn btn-small btn-delete" onClick={() => deleteTask(index)} data-testid={`delete-task-btn-${index}`}>
                       Delete
                     </button>
                   </div>
@@ -733,28 +736,29 @@ function App() {
       )}
 
       {showForm && (
-        <div className="management-panel">
+        <div className="management-panel" data-testid="form-modal">
           <div className="panel-header">
-            <h3>{editingItem?.type === 'category' ? (editingItem.key ? 'Edit Category' : 'Add Category') : 'Add Task'}</h3>
-            <button className="close-btn" onClick={closeForm}>&times;</button>
+            <h3 data-testid="form-title">{editingItem?.type === 'category' ? (editingItem.key ? 'Edit Category' : 'Add Category') : 'Add Task'}</h3>
+            <button className="close-btn" onClick={closeForm} data-testid="close-form-btn">&times;</button>
           </div>
           <div className="panel-body">
-            <form onSubmit={handleFormSubmit}>
+            <form onSubmit={handleFormSubmit} data-testid="item-form">
               <div className="form-group">
-                <label htmlFor="item-name">Name:</label>
+                <label htmlFor="item-name" data-testid="item-name-label">Name:</label>
                 <input
                   type="text"
                   id="item-name"
                   value={formData}
                   onChange={(e) => setFormData(e.target.value)}
                   required
+                  data-testid="item-name-input"
                 />
               </div>
               <div className="form-actions">
-                <button type="button" className="btn btn-secondary" onClick={closeForm}>
+                <button type="button" className="btn btn-secondary" onClick={closeForm} data-testid="cancel-form-btn">
                   Cancel
                 </button>
-                <button type="submit" className="btn btn-primary">
+                <button type="submit" className="btn btn-primary" data-testid="save-form-btn">
                   Save
                 </button>
               </div>
@@ -764,12 +768,12 @@ function App() {
       )}
 
       {showShortcutsHelp && (
-        <div className="shortcuts-panel">
+        <div className="shortcuts-panel" data-testid="shortcuts-panel">
           <div className="panel-header">
-            <h3>Keyboard Shortcuts</h3>
-            <button className="close-btn" onClick={() => setShowShortcutsHelp(false)}>&times;</button>
+            <h3 data-testid="shortcuts-title">Keyboard Shortcuts</h3>
+            <button className="close-btn" onClick={() => setShowShortcutsHelp(false)} data-testid="close-shortcuts-btn">&times;</button>
           </div>
-          <div className="panel-body">
+          <div className="panel-body" data-testid="shortcuts-body">
             <div className="shortcuts-section">
               <h4>Navigation</h4>
               <div className="shortcut-item">
@@ -836,12 +840,12 @@ function App() {
       )}
 
       {showProductivityPanel && (
-        <div className="productivity-panel">
+        <div className="productivity-panel" data-testid="productivity-panel">
           <div className="panel-header">
-            <h3>Productivity Analytics</h3>
-            <button className="close-btn" onClick={() => setShowProductivityPanel(false)}>&times;</button>
+            <h3 data-testid="productivity-title">Productivity Analytics</h3>
+            <button className="close-btn" onClick={() => setShowProductivityPanel(false)} data-testid="close-productivity-btn">&times;</button>
           </div>
-          <div className="panel-body">
+          <div className="panel-body" data-testid="productivity-body">
             {(() => {
               const metrics = getProductivityMetrics();
               return (
