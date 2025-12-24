@@ -612,3 +612,36 @@ header p {
     gap: 0.25rem;
   }
 }
+
+/* Professional Icon Styles */
+.icon-keyboard::before { content: "⌨"; }
+.icon-play::before { content: "▶"; }
+.icon-stop::before { content: "■"; }
+.icon-reset::before { content: "↺"; }
+.icon-stats::before { content: "◈"; }
+.icon-coffee::before { content: "◉"; }
+.icon-chart::before { content: "▬"; }
+.icon-clock::before { content: "⊙"; }
+.icon-flash::before { content: "▲"; }
+.icon-trend::before { content: "△"; }
+
+[class^="icon-"]::before {
+  display: inline-block;
+  margin-right: 0.5rem;
+  font-size: 1em;
+  vertical-align: middle;
+  font-weight: bold;
+  color: #4b5563;
+}
+
+.metric-section h4 [class^="icon-"]::before {
+  margin-right: 0.75rem;
+  font-size: 1.1em;
+  color: #1f2937;
+}
+
+.btn [class^="icon-"]::before {
+  margin-right: 0.375rem;
+  font-size: 0.875em;
+  color: inherit;
+}

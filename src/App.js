@@ -575,7 +575,7 @@ function App() {
         <p>Track your testing progress with ease</p>
         <div className="shortcuts-hint">
           <button className="btn btn-small btn-secondary" onClick={() => setShowShortcutsHelp(true)}>
-            ⌨️ Shortcuts
+            <span className="icon-keyboard"></span> Shortcuts
           </button>
         </div>
         <div className="session-timer">
@@ -588,22 +588,22 @@ function App() {
           <div className="timer-controls">
             {!isSessionActive ? (
               <button className="btn btn-small btn-success" onClick={startSession}>
-                ▶️ Start
+                <span className="icon-play"></span> Start
               </button>
             ) : (
               <button className="btn btn-small btn-danger" onClick={stopSession}>
-                ⏹️ Stop
+                <span className="icon-stop"></span> Stop
               </button>
             )}
             <button className="btn btn-small btn-warning" onClick={resetSession}>
-              🔄 Reset
+              <span className="icon-reset"></span> Reset
             </button>
             <button className="btn btn-small btn-info" onClick={() => setShowProductivityPanel(true)}>
-              📊 Stats
+              <span className="icon-stats"></span> Stats
             </button>
             {shouldTakeBreak() && (
               <button className="btn btn-small btn-primary" onClick={takeBreak}>
-                ☕ Break
+                <span className="icon-coffee"></span> Break
               </button>
             )}
           </div>
@@ -810,7 +810,7 @@ function App() {
             </div>
             
             <div className="shortcuts-section">
-              <h4>⏱️ Time Tracking</h4>
+              <h4><span className="icon-clock"></span> Time Tracking</h4>
               <div className="shortcut-item">
                 <kbd>Ctrl</kbd> + <kbd>T</kbd> <span>Start/Stop session timer</span>
               </div>
@@ -847,7 +847,7 @@ function App() {
               return (
                 <div className="productivity-metrics">
                   <div className="metric-section">
-                    <h4>📊 Overall Progress</h4>
+                    <h4><span className="icon-chart"></span> Overall Progress</h4>
                     <div className="metric-grid">
                       <div className="metric-item">
                         <span className="metric-label">Total Tasks:</span>
@@ -865,7 +865,7 @@ function App() {
                   </div>
 
                   <div className="metric-section">
-                    <h4>⏱️ Time Tracking</h4>
+                    <h4><span className="icon-clock"></span> Time Tracking</h4>
                     <div className="metric-grid">
                       <div className="metric-item">
                         <span className="metric-label">Current Session:</span>
@@ -883,7 +883,7 @@ function App() {
                   </div>
 
                   <div className="metric-section">
-                    <h4>⚡ Productivity</h4>
+                    <h4><span className="icon-flash"></span> Productivity</h4>
                     <div className="metric-grid">
                       <div className="metric-item">
                         <span className="metric-label">Tasks/Hour:</span>
@@ -905,7 +905,7 @@ function App() {
                   </div>
 
                   <div className="metric-section">
-                    <h4>📈 Category Breakdown</h4>
+                    <h4><span className="icon-trend"></span> Category Breakdown</h4>
                     <div className="category-breakdown">
                       {Object.keys(checklistData).map(categoryKey => {
                         const category = checklistData[categoryKey];
