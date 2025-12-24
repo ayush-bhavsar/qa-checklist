@@ -344,5 +344,3 @@ Distributed under the MIT License. See the [LICENSE](LICENSE) file for full text
 [Back to Top](#qa-checklist-tool)
 
 </div>
- 
- 
