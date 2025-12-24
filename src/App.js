@@ -13,6 +13,15 @@ function App() {
   const [formData, setFormData] = useState('');
   const [focusedTaskIndex, setFocusedTaskIndex] = useState(-1);
 
+  // Time tracking state
+  const [sessionStartTime, setSessionStartTime] = useState(null);
+  const [sessionElapsedTime, setSessionElapsedTime] = useState(0);
+  const [isSessionActive, setIsSessionActive] = useState(false);
+  const [taskTimeTracking, setTaskTimeTracking] = useState({});
+  const [categoryTimeTracking, setCategoryTimeTracking] = useState({});
+  const [lastBreakTime, setLastBreakTime] = useState(null);
+  const [showProductivityPanel, setShowProductivityPanel] = useState(false);
+
   // Load checklist data from localStorage or use defaults
   useEffect(() => {
     const loadChecklistData = () => {
@@ -244,6 +253,90 @@ function App() {
     closeForm();
   };
 
+  // Time tracking functions
+  const startSession = () => {
+    const now = Date.now();
+    setSessionStartTime(now);
+    setIsSessionActive(true);
+    setLastBreakTime(now);
+    localStorage.setItem('sessionStartTime', now.toString());
+    localStorage.setItem('isSessionActive', 'true');
+  };
+
+  const stopSession = () => {
+    if (sessionStartTime) {
+      const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
+      setSessionElapsedTime(prev => prev + elapsed);
+      setIsSessionActive(false);
+      setSessionStartTime(null);
+      localStorage.removeItem('sessionStartTime');
+      localStorage.setItem('isSessionActive', 'false');
+      localStorage.setItem('sessionElapsedTime', (sessionElapsedTime + elapsed).toString());
+    }
+  };
+
+  const resetSession = () => {
+    setSessionStartTime(null);
+    setSessionElapsedTime(0);
+    setIsSessionActive(false);
+    setLastBreakTime(null);
+    localStorage.removeItem('sessionStartTime');
+    localStorage.setItem('isSessionActive', 'false');
+    localStorage.setItem('sessionElapsedTime', '0');
+  };
+
+  const getCurrentSessionTime = () => {
+    if (!sessionStartTime) return sessionElapsedTime;
+    return sessionElapsedTime + Math.floor((Date.now() - sessionStartTime) / 1000);
+  };
+
+  const formatTime = (seconds) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const trackTaskTime = (taskText, timeSpent) => {
+    setTaskTimeTracking(prev => ({
+      ...prev,
+      [taskText]: (prev[taskText] || 0) + timeSpent
+    }));
+  };
+
+  const trackCategoryTime = (categoryKey, timeSpent) => {
+    setCategoryTimeTracking(prev => ({
+      ...prev,
+      [categoryKey]: (prev[categoryKey] || 0) + timeSpent
+    }));
+  };
+
+  const getProductivityMetrics = () => {
+    const totalTasks = Object.values(checklistData).reduce((sum, category) => sum + category.items.length, 0);
+    const completedTasks = Object.keys(checkedItems).filter(task => checkedItems[task]).length;
+    const totalTimeSpent = Object.values(taskTimeTracking).reduce((sum, time) => sum + time, 0);
+    const tasksPerHour = totalTimeSpent > 0 ? (completedTasks / (totalTimeSpent / 3600)).toFixed(2) : 0;
+    
+    return {
+      totalTasks,
+      completedTasks,
+      completionRate: totalTasks > 0 ? ((completedTasks / totalTasks) * 100).toFixed(1) : 0,
+      totalTimeSpent,
+      tasksPerHour,
+      averageTimePerTask: completedTasks > 0 ? Math.floor(totalTimeSpent / completedTasks) : 0
+    };
+  };
+
+  const shouldTakeBreak = () => {
+    if (!lastBreakTime) return false;
+    const timeSinceLastBreak = (Date.now() - lastBreakTime) / 1000 / 60; // minutes
+    return timeSinceLastBreak >= 45; // Recommend break every 45 minutes
+  };
+
+  const takeBreak = () => {
+    setLastBreakTime(Date.now());
+  };
+
   // Save state when checkedItems or currentCategory changes
   useEffect(() => {
     saveStateToLocalStorage();
@@ -350,6 +443,29 @@ function App() {
           }
           break;
 
+        case 't':
+        case 'T':
+          if (isCtrlOrCmd && !isShift) {
+            e.preventDefault();
+            if (isSessionActive) {
+              stopSession();
+            } else {
+              startSession();
+            }
+          } else if (isCtrlOrCmd && isShift) {
+            e.preventDefault();
+            setShowProductivityPanel(true);
+          }
+          break;
+
+        case 'b':
+        case 'B':
+          if (isCtrlOrCmd && !isShift && shouldTakeBreak()) {
+            e.preventDefault();
+            takeBreak();
+          }
+          break;
+
         case 'Escape':
           if (showForm) {
             closeForm();
@@ -371,6 +487,87 @@ function App() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [currentCategory, focusedTaskIndex, checkedItems, checklistData, showForm, showTaskManagement, showCategoryManagement, showShortcutsHelp]);
 
+  // Load time tracking data
+  useEffect(() => {
+    try {
+      const savedTaskTime = localStorage.getItem('taskTimeTracking');
+      const savedCategoryTime = localStorage.getItem('categoryTimeTracking');
+      const savedSessionElapsed = localStorage.getItem('sessionElapsedTime');
+      const savedSessionActive = localStorage.getItem('isSessionActive');
+      const savedSessionStart = localStorage.getItem('sessionStartTime');
+      const savedLastBreak = localStorage.getItem('lastBreakTime');
+
+      if (savedTaskTime) setTaskTimeTracking(JSON.parse(savedTaskTime));
+      if (savedCategoryTime) setCategoryTimeTracking(JSON.parse(savedCategoryTime));
+      if (savedSessionElapsed) setSessionElapsedTime(parseInt(savedSessionElapsed) || 0);
+      if (savedSessionActive === 'true') {
+        setIsSessionActive(true);
+        if (savedSessionStart) setSessionStartTime(parseInt(savedSessionStart));
+      }
+      if (savedLastBreak) setLastBreakTime(parseInt(savedLastBreak));
+    } catch (e) {
+      console.error('Error loading time tracking data:', e);
+    }
+  }, []);
+
+  // Save time tracking data
+  useEffect(() => {
+    localStorage.setItem('taskTimeTracking', JSON.stringify(taskTimeTracking));
+  }, [taskTimeTracking]);
+
+  useEffect(() => {
+    localStorage.setItem('categoryTimeTracking', JSON.stringify(categoryTimeTracking));
+  }, [categoryTimeTracking]);
+
+  useEffect(() => {
+    localStorage.setItem('sessionElapsedTime', sessionElapsedTime.toString());
+  }, [sessionElapsedTime]);
+
+  useEffect(() => {
+    localStorage.setItem('isSessionActive', isSessionActive.toString());
+  }, [isSessionActive]);
+
+  useEffect(() => {
+    if (sessionStartTime) {
+      localStorage.setItem('sessionStartTime', sessionStartTime.toString());
+    }
+  }, [sessionStartTime]);
+
+  useEffect(() => {
+    if (lastBreakTime) {
+      localStorage.setItem('lastBreakTime', lastBreakTime.toString());
+    }
+  }, [lastBreakTime]);
+
+  // Session timer effect
+  useEffect(() => {
+    let interval = null;
+    if (isSessionActive) {
+      interval = setInterval(() => {
+        // Update session time every second
+        setSessionElapsedTime(prev => prev + 1);
+      }, 1000);
+    } else {
+      clearInterval(interval);
+    }
+    return () => clearInterval(interval);
+  }, [isSessionActive]);
+
+  // Break reminder effect
+  useEffect(() => {
+    if (isSessionActive && shouldTakeBreak()) {
+      // Show break reminder notification
+      if (Notification.permission === 'granted') {
+        new Notification('Break Time!', {
+          body: 'You\'ve been testing for 45 minutes. Time for a break!',
+          icon: '/favicon.ico'
+        });
+      } else if (Notification.permission !== 'denied') {
+        Notification.requestPermission();
+      }
+    }
+  }, [isSessionActive, lastBreakTime]);
+
   return (
     <div className="container">
       <header>
@@ -380,6 +577,36 @@ function App() {
           <button className="btn btn-small btn-secondary" onClick={() => setShowShortcutsHelp(true)}>
             ⌨️ Shortcuts
           </button>
+        </div>
+        <div className="session-timer">
+          <div className="timer-display">
+            <span className="timer-label">Session:</span>
+            <span className={`timer-value ${isSessionActive ? 'active' : ''}`}>
+              {formatTime(getCurrentSessionTime())}
+            </span>
+          </div>
+          <div className="timer-controls">
+            {!isSessionActive ? (
+              <button className="btn btn-small btn-success" onClick={startSession}>
+                ▶️ Start
+              </button>
+            ) : (
+              <button className="btn btn-small btn-danger" onClick={stopSession}>
+                ⏹️ Stop
+              </button>
+            )}
+            <button className="btn btn-small btn-warning" onClick={resetSession}>
+              🔄 Reset
+            </button>
+            <button className="btn btn-small btn-info" onClick={() => setShowProductivityPanel(true)}>
+              📊 Stats
+            </button>
+            {shouldTakeBreak() && (
+              <button className="btn btn-small btn-primary" onClick={takeBreak}>
+                ☕ Break
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -583,6 +810,19 @@ function App() {
             </div>
             
             <div className="shortcuts-section">
+              <h4>⏱️ Time Tracking</h4>
+              <div className="shortcut-item">
+                <kbd>Ctrl</kbd> + <kbd>T</kbd> <span>Start/Stop session timer</span>
+              </div>
+              <div className="shortcut-item">
+                <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>T</kbd> <span>Show productivity stats</span>
+              </div>
+              <div className="shortcut-item">
+                <kbd>Ctrl</kbd> + <kbd>B</kbd> <span>Take a break (when reminded)</span>
+              </div>
+            </div>
+            
+            <div className="shortcuts-section">
               <h4>General</h4>
               <div className="shortcut-item">
                 <kbd>Ctrl</kbd> + <kbd>/</kbd> <span>Show this help</span>
@@ -591,6 +831,101 @@ function App() {
                 <kbd>Esc</kbd> <span>Close panels/forms</span>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showProductivityPanel && (
+        <div className="productivity-panel">
+          <div className="panel-header">
+            <h3>Productivity Analytics</h3>
+            <button className="close-btn" onClick={() => setShowProductivityPanel(false)}>&times;</button>
+          </div>
+          <div className="panel-body">
+            {(() => {
+              const metrics = getProductivityMetrics();
+              return (
+                <div className="productivity-metrics">
+                  <div className="metric-section">
+                    <h4>📊 Overall Progress</h4>
+                    <div className="metric-grid">
+                      <div className="metric-item">
+                        <span className="metric-label">Total Tasks:</span>
+                        <span className="metric-value">{metrics.totalTasks}</span>
+                      </div>
+                      <div className="metric-item">
+                        <span className="metric-label">Completed:</span>
+                        <span className="metric-value">{metrics.completedTasks}</span>
+                      </div>
+                      <div className="metric-item">
+                        <span className="metric-label">Completion Rate:</span>
+                        <span className="metric-value">{metrics.completionRate}%</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="metric-section">
+                    <h4>⏱️ Time Tracking</h4>
+                    <div className="metric-grid">
+                      <div className="metric-item">
+                        <span className="metric-label">Current Session:</span>
+                        <span className="metric-value">{formatTime(getCurrentSessionTime())}</span>
+                      </div>
+                      <div className="metric-item">
+                        <span className="metric-label">Total Time Spent:</span>
+                        <span className="metric-value">{formatTime(metrics.totalTimeSpent)}</span>
+                      </div>
+                      <div className="metric-item">
+                        <span className="metric-label">Avg Time/Task:</span>
+                        <span className="metric-value">{formatTime(metrics.averageTimePerTask)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="metric-section">
+                    <h4>⚡ Productivity</h4>
+                    <div className="metric-grid">
+                      <div className="metric-item">
+                        <span className="metric-label">Tasks/Hour:</span>
+                        <span className="metric-value">{metrics.tasksPerHour}</span>
+                      </div>
+                      <div className="metric-item">
+                        <span className="metric-label">Session Status:</span>
+                        <span className={`metric-value ${isSessionActive ? 'active' : 'inactive'}`}>
+                          {isSessionActive ? 'Active' : 'Inactive'}
+                        </span>
+                      </div>
+                      <div className="metric-item">
+                        <span className="metric-label">Break Reminder:</span>
+                        <span className={`metric-value ${shouldTakeBreak() ? 'warning' : 'good'}`}>
+                          {shouldTakeBreak() ? 'Take a break!' : 'Good to go'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="metric-section">
+                    <h4>📈 Category Breakdown</h4>
+                    <div className="category-breakdown">
+                      {Object.keys(checklistData).map(categoryKey => {
+                        const category = checklistData[categoryKey];
+                        const completedInCategory = category.items.filter(item => checkedItems[item]).length;
+                        const categoryTime = categoryTimeTracking[categoryKey] || 0;
+                        return (
+                          <div key={categoryKey} className="category-metric">
+                            <span className="category-name">{category.name}</span>
+                            <div className="category-stats">
+                              <span>{completedInCategory}/{category.items.length} tasks</span>
+                              <span>{formatTime(categoryTime)}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
