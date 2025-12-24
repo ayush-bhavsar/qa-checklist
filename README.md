@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen.svg)]()
 
-A comprehensive, professional React-based QA testing checklist management tool with time tracking, productivity analytics, and advanced testing workflow features.
+A modern React application for managing QA testing checklists with productivity analytics, time tracking, and automation-friendly selectors.
 
 [Live Demo](#) • [Documentation](#features) • [Testing](#testing)
 
@@ -16,6 +16,7 @@ A comprehensive, professional React-based QA testing checklist management tool w
 
 ## Table of Contents
 
+- [Highlights](#highlights)
 - [Features](#features)
 - [Quick Start](#quick-start)
 - [Usage Guide](#usage-guide)
@@ -30,38 +31,48 @@ A comprehensive, professional React-based QA testing checklist management tool w
 
 ---
 
+## Highlights
+
+- Built with React 18 and responsive CSS for desktop and mobile workflows
+- Persists user data, custom categories, and sessions using `localStorage`
+- Rich time-tracking and productivity analytics tailored for QA teams
+- Comprehensive `data-testid` hooks and testing-oriented class names
+- Keyboard-driven controls and polished, professional UI system
+
+---
+
 ## Features
 
 ### Core Functionality
 
-- **Multiple Testing Categories** - Pre-built categories for Smoke, Regression, UI, Functional, and API testing
-- **Custom Management** - Add, edit, and delete custom categories and tasks
-- **Real-time Progress Tracking** - Visual progress bars with completion percentages
-- **Persistent Storage** - Automatic saving using localStorage
-- **Export Capabilities** - Export checklists as CSV files
-- **Responsive Design** - Optimized for desktop, tablet, and mobile devices
+- **Multiple Testing Categories**: Smoke, Regression, UI, Functional, and API templates ready to go
+- **Custom Management**: Add, edit, and delete categories and tasks based on project needs
+- **Real-time Progress**: Progress bars and completion percentages update as you work
+- **Persistent Storage**: Automatically saves state locally for instant resume
+- **Export Support**: Generate CSV exports for documentation and reporting
+- **Responsive Design**: Layout adapts gracefully to desktops, tablets, and phones
 
-### Time Tracking & Productivity
+### Time Tracking and Productivity
 
-- **Session Timer** - Track active testing session time with start/stop/reset controls
-- **Productivity Analytics** - Comprehensive metrics including tasks per hour, completion rates
-- **Break Reminders** - Automated 45-minute break notifications to prevent fatigue
-- **Detailed Reports** - Category-wise time tracking and performance insights
-- **Session Management** - Persistent session state across browser refreshes
+- **Dedicated Session Timer**: Start/stop/reset controls, persisted across reloads
+- **Productivity Metrics**: Tracks completed tasks per hour, completion rates, and trends
+- **Break Reminders**: Smart notifications prompt breaks at configurable intervals
+- **Category Insights**: Surface time spent per category to guide QA prioritization
+- **Session History**: Keeps context so you can pick up exactly where you left off
 
-### Advanced User Experience
+### User Experience Enhancements
 
-- **Keyboard Shortcuts** - Full keyboard navigation and shortcuts for power users
-- **Professional UI** - Clean, modern interface with subtle icons and smooth animations
-- **Focus Management** - Arrow key navigation through checklist items
-- **Smart Notifications** - Browser notifications for break reminders
-- **Theme Consistency** - Professional color scheme and typography
+- **Keyboard Shortcuts**: Navigate, manage tasks, and toggle timers without leaving the keyboard
+- **Professional Visuals**: Iconography, typography, and spacing tuned for clarity
+- **Focus Management**: Arrow-key navigation and focus preservation across interactions
+- **Notifications**: Uses the browser Notifications API for hands-off reminders
+- **Consistent Theming**: Unified color palette and motion to reinforce usability
 
-### Testing & Automation
+### Testing and Automation
 
-- **Test Automation Ready** - Comprehensive data-testid attributes for all components
-- **Test Classes** - CSS classes for automated testing frameworks
-- **Development Tools** - ESLint configuration and optimized build process
+- **Automation Ready**: Consistent `data-testid` hooks across interactive elements
+- **CSS Test Classes**: Dedicated selectors to support UI automation tools
+- **Development Tooling**: ESLint, formatting conventions, and build scripts included
 
 ---
 
@@ -69,84 +80,75 @@ A comprehensive, professional React-based QA testing checklist management tool w
 
 ### Prerequisites
 
-- Node.js 16.x or higher
-- npm or yarn package manager
+- Node.js 16 or later
+- npm (bundled with Node.js) or Yarn
 
 ### Installation
 
-1. **Clone the repository**
+1. Clone the repository
    ```bash
    git clone https://github.com/ayush-bhavsar/qa-checklist.git
    cd qa-checklist
    ```
-
-2. **Install dependencies**
+2. Install dependencies
    ```bash
    npm install
    ```
-
-3. **Start the development server**
+3. Start the development server
    ```bash
    npm start
    ```
-
-4. **Open your browser**
-   ```
+4. Visit the application
+   ```text
    http://localhost:3000
    ```
 
-### Build for Production
+### Production Build
 
 ```bash
 npm run build
 ```
 
+The optimized output is written to the `build` directory.
+
 ---
 
 ## Usage Guide
 
-### Basic Workflow
+### Typical Workflow
 
-1. **Select Category** - Choose from pre-built testing categories or create custom ones
-2. **Navigate Tasks** - Use mouse clicks or keyboard arrows to move between tasks
-3. **Mark Completion** - Click checkboxes or press Space/Enter to toggle task status
-4. **Track Progress** - Monitor real-time progress bar and completion percentage
-5. **Manage Content** - Add/edit/delete categories and tasks as needed
+1. Select or create a testing category.
+2. Navigate tasks with the keyboard or mouse.
+3. Toggle task completion to update progress instantly.
+4. Track progress and productivity using the stats panel.
+5. Export results or reset when a cycle is complete.
 
 ### Time Tracking
 
-1. **Start Session** - Click Start or press `Ctrl+T` to begin timing
-2. **Active Testing** - Timer runs automatically while session is active
-3. **Take Breaks** - Receive notifications every 45 minutes for break reminders
-4. **View Analytics** - Click Stats to see productivity metrics
-5. **Stop/Reset** - Use Stop or Reset to control session timing
+1. Start a session via the on-screen control or `Ctrl+T`.
+2. Continue testing; the timer and session state persist automatically.
+3. Respond to break reminders to maintain sustainable pacing.
+4. Review analytics to understand efficiency and throughput.
+5. Stop or reset when the testing session concludes.
 
 ### Keyboard Shortcuts
 
 | Shortcut | Action |
-|----------|--------|
-| `↑/↓` | Navigate between tasks |
-| `Space/Enter` | Toggle task completion |
-| `Ctrl+T` | Start/Stop session timer |
-| `Ctrl+Shift+T` | Show productivity stats |
-| `Ctrl+B` | Take break (when reminded) |
-| `Ctrl+N` | Add new task |
-| `Ctrl+E` | Edit focused task |
-| `Ctrl+D` | Delete focused task |
-| `Ctrl+R` | Reset checklist |
-| `Ctrl+S` | Export as CSV |
-| `Ctrl+M` | Manage tasks |
-| `Ctrl+Shift+M` | Manage categories |
-| `Ctrl+/` | Show shortcuts help |
-| `Esc` | Close panels/forms |
-
-### Advanced Features
-
-- **Custom Categories** - Create specialized testing checklists for your projects
-- **Task Dependencies** - Organize tasks logically within categories
-- **Progress Analytics** - Track completion rates and time efficiency
-- **Data Export** - Generate CSV reports for documentation and reporting
-- **Session Persistence** - Resume work exactly where you left off
+| --- | --- |
+| `↑` / `↓` | Move between tasks |
+| `Space` or `Enter` | Toggle task completion |
+| `Ctrl+T` | Start or stop the session timer |
+| `Ctrl+Shift+T` | Open productivity statistics |
+| `Ctrl+B` | Toggle break acknowledgement |
+| `Ctrl+N` | Create a new task |
+| `Ctrl+E` | Edit the focused task |
+| `Ctrl+D` | Delete the focused task |
+| `Ctrl+R` | Reset the active checklist |
+| `Ctrl+S` | Export current checklist as CSV |
+| `Ctrl+M` | Open task management |
+| `Ctrl+Shift+M` | Open category management |
+| `Ctrl+/` | Display shortcut reference |
+| `Esc` | Close open panels or dialogs |
 
 ---
 
@@ -155,78 +157,77 @@ npm run build
 ```
 qa-checklist/
 ├── public/
-│   ├── index.html          # HTML template
-│   └── favicon.ico         # App icon
+│   ├── index.html
+│   └── favicon.ico
 ├── src/
-│   ├── App.js              # Main application component
-│   ├── data.js             # Default checklist data
-│   ├── index.css           # Global styles and themes
-│   └── index.js            # React application entry point
-├── build/                  # Production build output
-├── package.json            # Dependencies and scripts
-├── README.md              # Project documentation
-└── .gitignore             # Git ignore rules
+│   ├── App.js
+│   ├── data.js
+│   ├── index.css
+│   └── index.js
+├── build/
+├── package.json
+├── README.md
+└── .gitignore
 ```
 
-### Key Components
+### Key Modules
 
-- **`App.js`** - Main React component with state management, event handlers, and UI rendering
-- **`data.js`** - Default testing categories and checklist items
-- **`index.css`** - Professional styling with responsive design and animations
+- `App.js`: Single-page React application that manages state, timers, persistence, and UI composition.
+- `data.js`: Default category and task definitions used during initial load or reset.
+- `index.css`: Global styling, layout rules, theming, and animation definitions.
 
 ---
 
 ## Testing
 
-### Automated Testing Setup
+The UI exposes stable selectors to integrate with frameworks such as Cypress, Playwright, Selenium, and Testing Library.
 
-The application includes comprehensive test automation attributes for easy integration with testing frameworks.
-
-#### Data Test IDs Available:
+### Available `data-testid` Hooks
 
 ```javascript
-// Main components
+// Core containers
 cy.get('[data-testid="qa-checklist-app"]')
 cy.get('[data-testid="session-timer"]')
 cy.get('[data-testid="category-selector"]')
 
-// Interactive elements
+// High-value controls
 cy.get('[data-testid="start-session-btn"]')
-cy.get('[data-testid="checklist-item-0"]')
 cy.get('[data-testid="manage-categories-btn"]')
+cy.get('[data-testid="manage-tasks-btn"]')
 
-// Dynamic elements
-cy.get('[data-testid="category-btn-smoke"]')
+// Task elements
 cy.get('[data-testid="task-item-0"]')
 cy.get('[data-testid="checklist-checkbox-0"]')
+cy.get('[data-testid="progress-fill"]')
 ```
 
-#### Example Test Cases:
+### Example Automation Flow
 
 ```javascript
-// Category selection test
-cy.get('[data-testid="category-btn-smoke"]').click()
-cy.get('[data-testid="checklist-section"]').should('be.visible')
+// Switch to the Smoke suite
+cy.get('[data-testid="category-btn-smoke"]').click();
+cy.get('[data-testid="checklist-section"]').should('be.visible');
 
-// Task completion test
-cy.get('[data-testid="checklist-checkbox-0"]').check()
-cy.get('[data-testid="progress-fill"]').should('have.css', 'width', '20%')
+// Complete the first task
+cy.get('[data-testid="checklist-checkbox-0"]').check();
+cy.get('[data-testid="progress-fill"]').should('not.have.css', 'width', '0%');
 
-// Time tracking test
-cy.get('[data-testid="start-session-btn"]').click()
-cy.get('[data-testid="timer-value"]').should('not.contain', '00:00:00')
+// Start timing and assert timer increments
+cy.get('[data-testid="start-session-btn"]').click();
+cy.wait(1100);
+cy.get('[data-testid="timer-value"]').should('not.contain', '00:00:00');
 ```
 
 ### Running Tests
 
 ```bash
-# Run test suite
+# Execute the test suite once
 npm test
 
-# Run tests in watch mode
+# Watch mode during development
 npm test -- --watch
 
-# Generate coverage report
+# Generate a coverage report
 npm test -- --coverage
 ```
 
@@ -234,36 +235,34 @@ npm test -- --coverage
 
 ## Customization
 
-### Adding New Categories
+### Add a Category via UI
 
-1. Use the "Manage Categories" button
-2. Click "Add New Category"
-3. Enter category name and save
-4. Add tasks to the new category
+1. Open the category management panel.
+2. Select **Add New Category** and provide a name.
+3. Save, then populate tasks through the task manager.
 
-### Modifying Default Data
-
-Edit `src/data.js` to customize default categories and tasks:
+### Seed Custom Defaults
 
 ```javascript
 export const defaultChecklistData = {
-  yourCategory: {
-    name: "Your Custom Category",
+  myCategory: {
+    name: "Release Certification",
     items: [
-      "Custom task 1",
-      "Custom task 2",
-      // Add more tasks...
+      "Validate release notes",
+      "Run smoke test suite",
+      "Audit analytics events"
     ]
   }
-}
+};
 ```
 
-### Styling Customization
+### Theme Adjustments
 
-Modify `src/index.css` to customize:
-- Color schemes and themes
-- Layout and spacing
-- Animations and transitions
+Edit `src/index.css` to tailor:
+
+- Color tokens and typography
+- Layout dimensions and spacing
+- Animation timing and easing
 - Responsive breakpoints
 
 ---
@@ -274,7 +273,7 @@ Modify `src/index.css` to customize:
 - Firefox 88+
 - Safari 14+
 - Edge 90+
-- Mobile browsers (iOS Safari, Chrome Mobile)
+- Mobile Safari and Chrome on modern iOS and Android
 
 ---
 
@@ -282,65 +281,65 @@ Modify `src/index.css` to customize:
 
 ### Vercel (Recommended)
 
-1. Push code to GitHub
-2. Connect repository to Vercel
-3. Automatic deployments on push
+1. Push the repository to GitHub.
+2. Connect the project in the Vercel dashboard.
+3. Deploy automatically on each push to the default branch.
 
 ### Netlify
 
 ```bash
 npm run build
-# Upload build/ folder to Netlify
+# Deploy the build/ directory via the Netlify UI or CLI
 ```
 
-### Manual Deployment
+### Self-Hosted Static Server
 
 ```bash
 npm run build
-# Serve build/ folder with any static server
+npm install -g serve
+serve -s build
 ```
 
 ---
 
 ## Contributing
 
-We welcome contributions! Please follow these steps:
+Contributions are welcome. Please:
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Commit changes: `git commit -m 'Add amazing feature'`
-4. Push to branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request
+1. Fork the repository.
+2. Create a feature branch: `git checkout -b feature/my-update`.
+3. Commit with clear messages: `git commit -m "Describe your change"`.
+4. Push and open a pull request describing your update.
 
 ### Development Guidelines
 
-- Follow React best practices
-- Add test IDs for new components
-- Update documentation for new features
-- Ensure responsive design
-- Test across multiple browsers
+- Follow established React and hook patterns.
+- Provide `data-testid` hooks for new interactive elements.
+- Update documentation when adding or changing features.
+- Validate responsive behavior across breakpoints.
+- Run `npm test` before submitting pull requests.
 
 ---
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Distributed under the MIT License. See the [LICENSE](LICENSE) file for full text.
 
 ---
 
 ## Acknowledgments
 
-- Built with [Create React App](https://create-react-app.dev/)
-- Icons and styling inspired by modern design systems
-- Testing frameworks support for comprehensive QA workflows
+- Created with [Create React App](https://create-react-app.dev/).
+- Iconography and layout influenced by contemporary design systems.
+- Tested with modern JavaScript tooling and automation frameworks.
 
 ---
 
 <div align="center">
 
-**Happy Testing!**
+**Happy Testing**
 
-*Made with care for QA professionals*
+*Crafted to streamline QA workflows*
 
 [Back to Top](#qa-checklist-tool)
 
