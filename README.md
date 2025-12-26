@@ -49,6 +49,7 @@ A modern React application for managing QA testing checklists with productivity 
 - **Custom Management**: Add, edit, and delete categories and tasks based on project needs
 - **Real-time Progress**: Progress bars and completion percentages update as you work
 - **Persistent Storage**: Automatically saves state locally for instant resume
+- **Scheduled Runs**: Build recurring templates that auto-clone checklists with assigned due dates
 - **Export Support**: Generate CSV exports for documentation and reporting
 - **Responsive Design**: Layout adapts gracefully to desktops, tablets, and phones
 
@@ -130,6 +131,14 @@ The optimized output is written to the `build` directory.
 3. Respond to break reminders to maintain sustainable pacing.
 4. Review analytics to understand efficiency and throughput.
 5. Stop or reset when the testing session concludes.
+
+### Scheduled Templates and Runs
+
+1. Open **Manage Schedules** to review recurring templates and upcoming runs.
+2. Create a template by selecting a base category, cadence, and due date lead time.
+3. Let the app auto-generate run-specific checklists ahead of each due date.
+4. Mark runs complete (or reopen them) to keep due-date enforcement honest.
+5. Archive runs once shipped to reduce clutter while preserving templates.
 
 ### Keyboard Shortcuts
 

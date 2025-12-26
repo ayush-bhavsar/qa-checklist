@@ -48,6 +48,14 @@ header p {
   margin-bottom: 2rem;
 }
 
+.category-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .category-selector h2 {
   margin-bottom: 1.5rem;
   font-size: 1.5rem;
@@ -205,6 +213,42 @@ header p {
   background-color: #e5e7eb;
 }
 
+.btn-success {
+  background-color: #10b981;
+  color: white;
+}
+
+.btn-success:hover {
+  background-color: #047857;
+}
+
+.btn-danger {
+  background-color: #ef4444;
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #dc2626;
+}
+
+.btn-warning {
+  background-color: #f59e0b;
+  color: white;
+}
+
+.btn-warning:hover {
+  background-color: #d97706;
+}
+
+.btn-info {
+  background-color: #0ea5e9;
+  color: white;
+}
+
+.btn-info:hover {
+  background-color: #0284c7;
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .container {
@@ -221,6 +265,11 @@ header p {
 
   .category-btn {
     text-align: center;
+  }
+
+  .category-header {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .checklist-header {
@@ -250,6 +299,12 @@ header p {
   overflow: hidden;
 }
 
+.scheduling-panel {
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .panel-header {
   display: flex;
   justify-content: space-between;
@@ -267,6 +322,132 @@ header p {
 
 .panel-body {
   padding: 1.5rem;
+}
+
+.scheduling-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.schedule-tabs {
+  display: flex;
+  gap: 1rem;
+}
+
+.tab-btn {
+  padding: 0.5rem 1.25rem;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  background: #f3f4f6;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab-btn.active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: white;
+}
+
+.schedule-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.template-list, .run-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.template-item, .run-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #f9fafb;
+}
+
+.template-item:hover, .run-item:hover {
+  background: #f3f4f6;
+}
+
+.template-details, .run-summary {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.template-details h4, .run-summary h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #1f2937;
+}
+
+.template-meta-grid, .run-meta-grid {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  font-size: 0.95rem;
+  color: #4b5563;
+}
+
+.template-actions, .run-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+
+.empty-state {
+  font-size: 0.95rem;
+  color: #6b7280;
+  padding: 1rem;
+  border: 1px dashed #d1d5db;
+  border-radius: 8px;
+  background: #f9fafb;
+}
+
+.run-item.overdue {
+  border-color: #f87171;
+  background: #fef2f2;
+}
+
+.template-form {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1rem;
+  background: #ffffff;
+}
+
+.template-form form {
+  display: grid;
+  gap: 1rem;
+}
+
+.template-form .form-actions {
+  justify-content: flex-end;
+}
+
+.due-banner {
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.due-banner.overdue {
+  background: #fef2f2;
+  color: #b91c1c;
 }
 
 .category-list, .task-list {
@@ -339,14 +520,16 @@ header p {
   color: #374151;
 }
 
-.form-group input {
+.form-group input,
+.form-group select {
   padding: 0.75rem;
   border: 1px solid #d1d5db;
   border-radius: 8px;
   font-size: 1rem;
 }
 
-.form-group input:focus {
+.form-group input:focus,
+.form-group select:focus {
   outline: none;
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
@@ -425,6 +608,17 @@ header p {
 
   .category-actions, .task-actions {
     justify-content: center;
+  }
+
+  .template-item, .run-item {
+    flex-direction: column;
+  }
+
+  .template-actions, .run-actions {
+    align-items: stretch;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
   }
 }
 
