@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { defaultChecklistData } from './data';
 
 function App() {
@@ -13,6 +13,20 @@ function App() {
   const [formData, setFormData] = useState('');
   const [focusedTaskIndex, setFocusedTaskIndex] = useState(-1);
 
+  const [runTemplates, setRunTemplates] = useState([]);
+  const [scheduledRuns, setScheduledRuns] = useState([]);
+  const [showSchedulingPanel, setShowSchedulingPanel] = useState(false);
+  const [showTemplateForm, setShowTemplateForm] = useState(false);
+  const [templateFormData, setTemplateFormData] = useState({
+    name: '',
+    categoryKey: '',
+    frequency: 'weekly',
+    targetDueDate: '',
+    dueLeadDays: 0
+  });
+  const [editingTemplateId, setEditingTemplateId] = useState(null);
+  const [activeScheduleTab, setActiveScheduleTab] = useState('templates');
+
   // Time tracking state
   const [sessionStartTime, setSessionStartTime] = useState(null);
   const [sessionElapsedTime, setSessionElapsedTime] = useState(0);
@@ -21,6 +35,28 @@ function App() {
   const [categoryTimeTracking, setCategoryTimeTracking] = useState({});
   const [lastBreakTime, setLastBreakTime] = useState(null);
   const [showProductivityPanel, setShowProductivityPanel] = useState(false);
+
+  const frequencyOptions = useMemo(() => ([
+    { value: 'daily', label: 'Daily', days: 1 },
+    { value: 'weekly', label: 'Weekly', days: 7 },
+    { value: 'biweekly', label: 'Bi-Weekly', days: 14 },
+    { value: 'monthly', label: 'Monthly', days: 30 }
+  ]), []);
+
+  const baseCategoryKeys = useMemo(
+    () => Object.keys(checklistData || {}).filter(key => !checklistData[key]?.meta?.isRunInstance),
+    [checklistData]
+  );
+
+  const sortedRuns = useMemo(() => {
+    return [...scheduledRuns].sort((a, b) => {
+      const aDate = new Date(a.dueDate || 0).getTime();
+      const bDate = new Date(b.dueDate || 0).getTime();
+      return aDate - bDate;
+    });
+  }, [scheduledRuns]);
+
+  const getItemKey = (categoryKey, itemText) => `${categoryKey}::${itemText}`;
 
   // Load checklist data from localStorage or use defaults
   useEffect(() => {
@@ -58,9 +94,34 @@ function App() {
     }
   }, []);
 
+  useEffect(() => {
+    try {
+      const savedTemplates = localStorage.getItem('runTemplates');
+      const savedRuns = localStorage.getItem('scheduledRuns');
+      if (savedTemplates) {
+        setRunTemplates(JSON.parse(savedTemplates));
+      }
+      if (savedRuns) {
+        setScheduledRuns(JSON.parse(savedRuns));
+      }
+    } catch (e) {
+      console.error('Error loading scheduling data:', e);
+      setRunTemplates([]);
+      setScheduledRuns([]);
+    }
+  }, []);
+
   // Save checklist data to localStorage
   const saveChecklistData = (data) => {
     localStorage.setItem('checklistData', JSON.stringify(data));
+  };
+
+  const saveRunTemplates = (templates) => {
+    localStorage.setItem('runTemplates', JSON.stringify(templates));
+  };
+
+  const saveScheduledRuns = (runs) => {
+    localStorage.setItem('scheduledRuns', JSON.stringify(runs));
   };
 
   // Save state to localStorage
@@ -81,22 +142,64 @@ function App() {
   };
 
   // Handle checkbox change
-  const handleCheckboxChange = (itemText, checked) => {
-    const newCheckedItems = { ...checkedItems, [itemText]: checked };
+  const handleCheckboxChange = (categoryKey, itemText, checked) => {
+    if (!categoryKey) {
+      return;
+    }
+    const itemKey = getItemKey(categoryKey, itemText);
+    const newCheckedItems = { ...checkedItems };
+    if (checked) {
+      newCheckedItems[itemKey] = true;
+    } else if (newCheckedItems[itemKey]) {
+      delete newCheckedItems[itemKey];
+    }
     setCheckedItems(newCheckedItems);
   };
 
-  // Calculate progress
-  const getProgress = () => {
-    if (!currentCategory || !checklistData[currentCategory]) return 0;
-    const totalItems = checklistData[currentCategory].items.length;
-    const checkedCount = Object.values(checkedItems).filter(Boolean).length;
-    return totalItems > 0 ? Math.round((checkedCount / totalItems) * 100) : 0;
+  const isItemChecked = (categoryKey, itemText) => {
+    if (!categoryKey) {
+      return false;
+    }
+    return Boolean(checkedItems[getItemKey(categoryKey, itemText)]);
   };
 
+  // Calculate progress
+  const getCategoryProgress = (categoryKey) => {
+    if (!categoryKey || !checklistData[categoryKey]) {
+      return 0;
+    }
+    const items = checklistData[categoryKey].items || [];
+    if (!items.length) {
+      return 0;
+    }
+    const checkedCount = items.filter(item => isItemChecked(categoryKey, item)).length;
+    return Math.round((checkedCount / items.length) * 100);
+  };
+
+  const getProgress = () => getCategoryProgress(currentCategory);
+
+  const currentRunMeta = currentCategory ? checklistData[currentCategory]?.meta : null;
+  const currentRunRecord = currentRunMeta?.runId ? scheduledRuns.find(run => run.id === currentRunMeta.runId) : null;
+  const currentRunOverdue = currentRunMeta?.dueDate ? isRunOverdue(currentRunMeta.dueDate, currentRunRecord?.status) : false;
+
   // Reset checklist
+  const clearCategoryChecks = (categoryKey) => {
+    if (!categoryKey) {
+      return;
+    }
+    setCheckedItems(prev => {
+      const updated = { ...prev };
+      Object.keys(updated).forEach(key => {
+        if (key.startsWith(`${categoryKey}::`)) {
+          delete updated[key];
+        }
+      });
+      return updated;
+    });
+  };
+
   const resetChecklist = () => {
-    setCheckedItems({});
+    clearCategoryChecks(currentCategory);
     saveStateToLocalStorage();
   };
 
@@ -108,7 +211,7 @@ function App() {
     let csvContent = 'Checklist Type,Task,Status\n';
 
     category.items.forEach(item => {
-      const status = checkedItems[item] ? 'Pass' : 'Not Checked';
+      const status = isItemChecked(currentCategory, item) ? 'Pass' : 'Not Checked';
       csvContent += `"${category.name}","${item}","${status}"\n`;
     });
 
@@ -142,12 +245,23 @@ function App() {
 
   const deleteCategory = (key) => {
     if (window.confirm(`Are you sure you want to delete the "${checklistData[key].name}" category?`)) {
+      const runMeta = checklistData[key]?.meta;
       const newData = { ...checklistData };
       delete newData[key];
       setChecklistData(newData);
       saveChecklistData(newData);
+      clearCategoryChecks(key);
       if (currentCategory === key) {
         setCurrentCategory(null);
+      }
+      if (runMeta?.runId) {
+        setScheduledRuns(prev => {
+          const updated = prev.filter(run => run.id !== runMeta.runId);
+          if (updated.length !== prev.length) {
+            saveScheduledRuns(updated);
+          }
+          return updated;
+        });
       }
     }
   };
@@ -182,9 +296,15 @@ function App() {
       saveChecklistData(newData);
 
       // Remove from checkedItems
-      const newCheckedItems = { ...checkedItems };
-      delete newCheckedItems[taskText];
-      setCheckedItems(newCheckedItems);
+      const itemKey = getItemKey(currentCategory, taskText);
+      setCheckedItems(prev => {
+        if (!prev[itemKey]) {
+          return prev;
+        }
+        const updated = { ...prev };
+        delete updated[itemKey];
+        return updated;
+      });
       saveStateToLocalStorage();
     }
   };
@@ -234,10 +354,12 @@ function App() {
         saveChecklistData(newData);
 
         // Update checkedItems key if task text changed
-        if (oldTask !== name && checkedItems[oldTask] !== undefined) {
+        const oldKey = getItemKey(currentCategory, oldTask);
+        const newKey = getItemKey(currentCategory, name);
+        if (oldKey !== newKey && checkedItems[oldKey]) {
           const newCheckedItems = { ...checkedItems };
-          newCheckedItems[name] = newCheckedItems[oldTask];
-          delete newCheckedItems[oldTask];
+          newCheckedItems[newKey] = newCheckedItems[oldKey];
+          delete newCheckedItems[oldKey];
           setCheckedItems(newCheckedItems);
           saveStateToLocalStorage();
         }
@@ -337,10 +459,403 @@ function App() {
     setLastBreakTime(Date.now());
   };
 
+  const getFrequencyDays = (frequency) => {
+    const match = frequencyOptions.find(option => option.value === frequency);
+    return match ? match.days : 7;
+  };
+
+  const getFrequencyLabel = (frequency) => {
+    const match = frequencyOptions.find(option => option.value === frequency);
+    return match ? match.label : frequency;
+  };
+
+  const advanceDueDate = (isoDate, frequency) => {
+    const base = isoDate ? new Date(isoDate) : null;
+    if (!base || Number.isNaN(base.getTime())) {
+      return null;
+    }
+    const next = new Date(base.getTime());
+    next.setDate(next.getDate() + getFrequencyDays(frequency));
+    return next;
+  };
+
+  const formatDateForDisplay = (isoDate) => {
+    if (!isoDate) {
+      return 'N/A';
+    }
+    const parsed = new Date(isoDate);
+    if (Number.isNaN(parsed.getTime())) {
+      return 'N/A';
+    }
+    return parsed.toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const toDateInputValue = (isoDate) => {
+    if (!isoDate) {
+      return '';
+    }
+    const parsed = new Date(isoDate);
+    if (Number.isNaN(parsed.getTime())) {
+      return '';
+    }
+    return parsed.toISOString().split('T')[0];
+  };
+
+  const dateFromInput = (dateString) => {
+    if (!dateString) {
+      return null;
+    }
+    const parsed = new Date(`${dateString}T00:00:00`);
+    if (Number.isNaN(parsed.getTime())) {
+      return null;
+    }
+    return parsed;
+  };
+
+  const calculateLeadStart = (dueDateIso, leadDays) => {
+    if (!dueDateIso) {
+      return null;
+    }
+    const due = new Date(dueDateIso);
+    if (Number.isNaN(due.getTime())) {
+      return null;
+    }
+    const threshold = new Date(due.getTime());
+    threshold.setDate(threshold.getDate() - Math.max(0, leadDays));
+    return threshold;
+  };
+
+  const isRunOverdue = (dueDateIso, status) => {
+    if (!dueDateIso || status === 'completed') {
+      return false;
+    }
+    const due = new Date(dueDateIso);
+    if (Number.isNaN(due.getTime())) {
+      return false;
+    }
+    return due < new Date();
+  };
+
+  const generateRunTitle = (baseName, templateName, dueDateIso) => {
+    const dueLabel = formatDateForDisplay(dueDateIso);
+    return `${baseName} • ${templateName} (Due ${dueLabel})`;
+  };
+
+  const createRunFromTemplate = (template, dueDateIso, { manualTrigger = false } = {}) => {
+    if (!template || !dueDateIso) {
+      return null;
+    }
+
+    const baseCategory = checklistData[template.categoryKey];
+    if (!baseCategory) {
+      return null;
+    }
+
+    const dueDate = new Date(dueDateIso);
+    if (Number.isNaN(dueDate.getTime())) {
+      return null;
+    }
+
+    const dueStamp = dueDate.toISOString().replace(/[^0-9]/g, '');
+    const runId = `run-${template.id}-${dueStamp}`;
+    if (scheduledRuns.some(run => run.id === runId)) {
+      return null;
+    }
+
+    const generatedAt = new Date().toISOString();
+    const categoryKey = `run-${template.id}-${Date.now().toString(36)}`;
+    const categoryEntry = {
+      ...baseCategory,
+      name: generateRunTitle(baseCategory.name, template.name, dueDateIso),
+      items: [...(baseCategory.items || [])],
+      meta: {
+        ...(baseCategory.meta || {}),
+        isRunInstance: true,
+        runId,
+        templateId: template.id,
+        dueDate: dueDateIso,
+        generatedAt,
+        sourceCategory: template.categoryKey,
+        leadDays: template.dueLeadDays || 0
+      }
+    };
+
+    setChecklistData(prev => {
+      const updated = { ...prev, [categoryKey]: categoryEntry };
+      saveChecklistData(updated);
+      return updated;
+    });
+
+    const runRecord = {
+      id: runId,
+      templateId: template.id,
+      templateName: template.name,
+      sourceCategoryKey: template.categoryKey,
+      sourceCategoryName: baseCategory.name,
+      categoryKey,
+      dueDate: dueDateIso,
+      leadDays: template.dueLeadDays || 0,
+      status: 'pending',
+      createdAt: generatedAt,
+      manual: manualTrigger
+    };
+
+    setScheduledRuns(prev => {
+      const updated = [...prev, runRecord];
+      saveScheduledRuns(updated);
+      return updated;
+    });
+
+    return runRecord;
+  };
+
+  const resetTemplateFormState = () => {
+    setTemplateFormData({
+      name: '',
+      categoryKey: '',
+      frequency: 'weekly',
+      targetDueDate: '',
+      dueLeadDays: 0
+    });
+    setEditingTemplateId(null);
+  };
+
+  const openSchedulingPanel = () => {
+    setShowSchedulingPanel(true);
+    setShowCategoryManagement(false);
+    setShowTaskManagement(false);
+    setShowForm(false);
+    setShowShortcutsHelp(false);
+    setShowTemplateForm(false);
+    resetTemplateFormState();
+  };
+
+  const closeSchedulingPanel = () => {
+    setShowSchedulingPanel(false);
+    setShowTemplateForm(false);
+    resetTemplateFormState();
+  };
+
+  const openTemplateFormModal = (templateId = null) => {
+    setShowTemplateForm(true);
+    if (templateId) {
+      const template = runTemplates.find(t => t.id === templateId);
+      if (template) {
+        setEditingTemplateId(templateId);
+        setTemplateFormData({
+          name: template.name,
+          categoryKey: template.categoryKey,
+          frequency: template.frequency,
+          targetDueDate: toDateInputValue(template.nextDueDate),
+          dueLeadDays: template.dueLeadDays || 0
+        });
+      }
+    } else {
+      resetTemplateFormState();
+    }
+  };
+
+  const handleTemplateFormChange = (field, value) => {
+    setTemplateFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleTemplateFormSubmit = (e) => {
+    e.preventDefault();
+    const { name, categoryKey, frequency, targetDueDate, dueLeadDays } = templateFormData;
+    if (!name.trim() || !categoryKey || !frequency || !targetDueDate) {
+      return;
+    }
+
+    const dueDate = dateFromInput(targetDueDate);
+    if (!dueDate) {
+      alert('Please provide a valid due date.');
+      return;
+    }
+
+    const parsedLead = parseInt(dueLeadDays, 10);
+    const normalizedLead = Number.isNaN(parsedLead) ? 0 : parsedLead;
+
+    if (editingTemplateId) {
+      setRunTemplates(prev => prev.map(template => {
+        if (template.id !== editingTemplateId) {
+          return template;
+        }
+        return {
+          ...template,
+          name: name.trim(),
+          categoryKey,
+          frequency,
+          dueLeadDays: Math.max(0, normalizedLead),
+          nextDueDate: dueDate.toISOString()
+        };
+      }));
+    } else {
+      const id = `tmpl-${Date.now().toString(36)}`;
+      const newTemplate = {
+        id,
+        name: name.trim(),
+        categoryKey,
+        frequency,
+        dueLeadDays: Math.max(0, normalizedLead),
+        nextDueDate: dueDate.toISOString()
+      };
+      setRunTemplates(prev => [...prev, newTemplate]);
+    }
+
+    setShowTemplateForm(false);
+    resetTemplateFormState();
+  };
+
+  const deleteTemplate = (templateId) => {
+    const template = runTemplates.find(t => t.id === templateId);
+    if (!template) {
+      return;
+    }
+    if (!window.confirm(`Delete the "${template.name}" schedule template?`)) {
+      return;
+    }
+    setRunTemplates(prev => prev.filter(t => t.id !== templateId));
+    if (editingTemplateId === templateId) {
+      resetTemplateFormState();
+      setShowTemplateForm(false);
+    }
+  };
+
+  const generateRunImmediately = (templateId) => {
+    const template = runTemplates.find(t => t.id === templateId);
+    if (!template) {
+      return;
+    }
+    const run = createRunFromTemplate(template, template.nextDueDate || new Date().toISOString(), { manualTrigger: true });
+    if (run) {
+      setRunTemplates(prev => prev.map(t => {
+        if (t.id !== templateId) {
+          return t;
+        }
+        const nextDue = advanceDueDate(t.nextDueDate, t.frequency);
+        return {
+          ...t,
+          nextDueDate: nextDue ? nextDue.toISOString() : t.nextDueDate
+        };
+      }));
+    }
+  };
+
+  const updateRunStatus = (runId, status) => {
+    setScheduledRuns(prev => {
+      let changed = false;
+      const updated = prev.map(run => {
+        if (run.id !== runId) {
+          return run;
+        }
+        changed = true;
+        return {
+          ...run,
+          status,
+          completedAt: status === 'completed' ? new Date().toISOString() : undefined
+        };
+      });
+      if (changed) {
+        saveScheduledRuns(updated);
+      }
+      return changed ? updated : prev;
+    });
+  };
+
+  const markRunComplete = (runId) => {
+    const run = scheduledRuns.find(r => r.id === runId);
+    if (run && checklistData[run.categoryKey]) {
+      const itemsToCheck = checklistData[run.categoryKey].items || [];
+      setCheckedItems(prev => {
+        const updated = { ...prev };
+        itemsToCheck.forEach(item => {
+          updated[getItemKey(run.categoryKey, item)] = true;
+        });
+        return updated;
+      });
+    }
+    updateRunStatus(runId, 'completed');
+  };
+
+  const reopenRun = (runId) => {
+    updateRunStatus(runId, 'pending');
+  };
+
+  const removeRun = (runId) => {
+    const run = scheduledRuns.find(r => r.id === runId);
+    if (!run) {
+      return;
+    }
+    if (!window.confirm('Archive this scheduled run?')) {
+      return;
+    }
+    setScheduledRuns(prev => {
+      const updated = prev.filter(r => r.id !== runId);
+      saveScheduledRuns(updated);
+      return updated;
+    });
+    setChecklistData(prev => {
+      if (!run.categoryKey || !prev[run.categoryKey]) {
+        return prev;
+      }
+      const updated = { ...prev };
+      delete updated[run.categoryKey];
+      saveChecklistData(updated);
+      return updated;
+    });
+    clearCategoryChecks(run.categoryKey);
+    if (currentCategory === run.categoryKey) {
+      setCurrentCategory(null);
+    }
+  };
+
+  const openRunFromPanel = (runId) => {
+    const run = scheduledRuns.find(r => r.id === runId);
+    if (!run) {
+      return;
+    }
+    if (!checklistData[run.categoryKey]) {
+      alert('This run checklist is no longer available.');
+      return;
+    }
+    setShowSchedulingPanel(false);
+    setCurrentCategory(run.categoryKey);
+    setFocusedTaskIndex(0);
+  };
+
   // Save state when checkedItems or currentCategory changes
   useEffect(() => {
     saveStateToLocalStorage();
   }, [checkedItems, currentCategory]);
+
+  useEffect(() => {
+    if (!checklistData || Object.keys(checklistData).length === 0) {
+      return;
+    }
+    const hasLegacyKeys = Object.keys(checkedItems || {}).some(key => key && !key.includes('::'));
+    if (!hasLegacyKeys) {
+      return;
+    }
+    const normalized = {};
+    Object.entries(checkedItems).forEach(([itemText, value]) => {
+      if (!value) {
+        return;
+      }
+      Object.keys(checklistData).forEach(categoryKey => {
+        if (checklistData[categoryKey]?.items?.includes(itemText)) {
+          normalized[getItemKey(categoryKey, itemText)] = true;
+        }
+      });
+    });
+    setCheckedItems(normalized);
+  }, [checklistData, checkedItems]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -360,7 +875,7 @@ function App() {
             e.preventDefault();
             const task = checklistData[currentCategory].items[focusedTaskIndex];
             if (task) {
-              handleCheckboxChange(task, !checkedItems[task]);
+              handleCheckboxChange(currentCategory, task, !isItemChecked(currentCategory, task));
             }
           }
           break;
@@ -539,6 +1054,82 @@ function App() {
     }
   }, [lastBreakTime]);
 
+  useEffect(() => {
+    if (!runTemplates.length || Object.keys(checklistData).length === 0) {
+      return;
+    }
+    const now = new Date();
+    let templatesChanged = false;
+    const nextTemplates = runTemplates.map(template => {
+      if (!template.nextDueDate) {
+        return template;
+      }
+      const threshold = calculateLeadStart(template.nextDueDate, template.dueLeadDays || 0) || new Date(template.nextDueDate);
+      if (threshold > now) {
+        return template;
+      }
+      const runCreated = createRunFromTemplate(template, template.nextDueDate);
+      if (!runCreated) {
+        return template;
+      }
+      const nextDue = advanceDueDate(template.nextDueDate, template.frequency);
+      templatesChanged = true;
+      return {
+        ...template,
+        nextDueDate: nextDue ? nextDue.toISOString() : template.nextDueDate
+      };
+    });
+    if (templatesChanged) {
+      setRunTemplates(nextTemplates);
+    }
+  }, [runTemplates, checklistData]);
+
+  useEffect(() => {
+    saveRunTemplates(runTemplates);
+  }, [runTemplates]);
+
+  useEffect(() => {
+    saveScheduledRuns(scheduledRuns);
+  }, [scheduledRuns]);
+
+  useEffect(() => {
+    if (!scheduledRuns.length) {
+      return;
+    }
+    setScheduledRuns(prevRuns => {
+      let changed = false;
+      const updated = prevRuns.map(run => {
+        const category = checklistData[run.categoryKey];
+        if (!category) {
+          return run;
+        }
+        const progress = getCategoryProgress(run.categoryKey);
+        if (progress === 100 && run.status !== 'completed') {
+          changed = true;
+          return {
+            ...run,
+            status: 'completed',
+            completedAt: new Date().toISOString()
+          };
+        }
+        if (progress < 100 && run.status === 'completed') {
+          changed = true;
+          return {
+            ...run,
+            status: 'pending',
+            completedAt: undefined
+          };
+        }
+        return run;
+      });
+      if (changed) {
+        saveScheduledRuns(updated);
+        return updated;
+      }
+      return prevRuns;
+    });
+  }, [checkedItems, checklistData, scheduledRuns]);
+
   // Session timer effect
   useEffect(() => {
     let interval = null;
@@ -616,6 +1207,9 @@ function App() {
           <button className="btn btn-secondary" onClick={openCategoryManagement} data-testid="manage-categories-btn">
             Manage Categories
           </button>
+          <button className="btn btn-secondary" onClick={openSchedulingPanel} data-testid="manage-schedules-btn">
+            Manage Schedules
+          </button>
         </div>
         <div className="category-buttons" data-testid="category-buttons">
           {Object.keys(checklistData).map(categoryKey => (
@@ -660,6 +1254,198 @@ function App() {
         </div>
       )}
 
+      {showSchedulingPanel && (
+        <div className="management-panel scheduling-panel" data-testid="scheduling-panel">
+          <div className="panel-header">
+            <h3 data-testid="scheduling-title">Recurring Test Runs</h3>
+            <button className="close-btn" onClick={closeSchedulingPanel} data-testid="close-scheduling-panel-btn">&times;</button>
+          </div>
+          <div className="panel-body scheduling-body">
+            <div className="schedule-tabs" data-testid="scheduling-tabs">
+              <button
+                className={`tab-btn ${activeScheduleTab === 'templates' ? 'active' : ''}`}
+                onClick={() => {
+                  setActiveScheduleTab('templates');
+                }}
+                data-testid="templates-tab-btn"
+              >
+                Templates
+              </button>
+              <button
+                className={`tab-btn ${activeScheduleTab === 'runs' ? 'active' : ''}`}
+                onClick={() => {
+                  setActiveScheduleTab('runs');
+                  setShowTemplateForm(false);
+                }}
+                data-testid="runs-tab-btn"
+              >
+                Scheduled Runs
+              </button>
+            </div>
+
+            {activeScheduleTab === 'templates' && (
+              <div className="schedule-section" data-testid="template-section">
+                <div className="section-header">
+                  <button className="btn btn-primary" onClick={() => openTemplateFormModal()} data-testid="add-template-btn">
+                    Add Template
+                  </button>
+                </div>
+                {runTemplates.length === 0 ? (
+                  <p className="empty-state" data-testid="empty-templates">No recurring templates yet.</p>
+                ) : (
+                  <div className="template-list" data-testid="template-list">
+                    {runTemplates.map(template => {
+                      const baseName = checklistData[template.categoryKey]?.name || 'Unavailable category';
+                      return (
+                        <div key={template.id} className="template-item" data-testid={`template-item-${template.id}`}>
+                          <div className="template-details">
+                            <h4>{template.name}</h4>
+                            <div className="template-meta-grid">
+                              <span><strong>Base:</strong> {baseName}</span>
+                              <span><strong>Cadence:</strong> {getFrequencyLabel(template.frequency)}</span>
+                              <span><strong>Due:</strong> {formatDateForDisplay(template.nextDueDate)}</span>
+                              <span><strong>Clone Lead:</strong> {Math.max(0, template.dueLeadDays || 0)} day(s)</span>
+                            </div>
+                          </div>
+                          <div className="template-actions">
+                            <button className="btn btn-small btn-secondary" onClick={() => openTemplateFormModal(template.id)} data-testid={`edit-template-btn-${template.id}`}>
+                              Edit
+                            </button>
+                            <button className="btn btn-small btn-info" onClick={() => generateRunImmediately(template.id)} data-testid={`generate-template-btn-${template.id}`}>
+                              Generate Now
+                            </button>
+                            <button className="btn btn-small btn-delete" onClick={() => deleteTemplate(template.id)} data-testid={`delete-template-btn-${template.id}`}>
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeScheduleTab === 'runs' && (
+              <div className="schedule-section" data-testid="runs-section">
+                {sortedRuns.length === 0 ? (
+                  <p className="empty-state" data-testid="empty-runs">No upcoming runs yet.</p>
+                ) : (
+                  <div className="run-list" data-testid="run-list">
+                    {sortedRuns.map(run => {
+                      const category = checklistData[run.categoryKey];
+                      const progress = getCategoryProgress(run.categoryKey);
+                      const overdue = isRunOverdue(run.dueDate, run.status);
+                      return (
+                        <div key={run.id} className={`run-item ${overdue ? 'overdue' : ''}`} data-testid={`run-item-${run.id}`}>
+                          <div className="run-summary">
+                            <h4>{run.templateName} &mdash; {formatDateForDisplay(run.dueDate)}</h4>
+                            <div className="run-meta-grid">
+                              <span><strong>Status:</strong> {run.status === 'completed' ? 'Completed' : overdue ? 'Overdue' : 'Pending'}</span>
+                              <span><strong>Checklist:</strong> {category ? category.name : 'Removed'}</span>
+                              <span><strong>Progress:</strong> {progress}%</span>
+                            </div>
+                          </div>
+                          <div className="run-actions">
+                            <button className="btn btn-small btn-primary" onClick={() => openRunFromPanel(run.id)} data-testid={`open-run-btn-${run.id}`} disabled={!category}>
+                              Open
+                            </button>
+                            {run.status !== 'completed' ? (
+                              <button className="btn btn-small btn-success" onClick={() => markRunComplete(run.id)} data-testid={`complete-run-btn-${run.id}`}>
+                                Mark Complete
+                              </button>
+                            ) : (
+                              <button className="btn btn-small btn-secondary" onClick={() => reopenRun(run.id)} data-testid={`reopen-run-btn-${run.id}`}>
+                                Reopen
+                              </button>
+                            )}
+                            <button className="btn btn-small btn-delete" onClick={() => removeRun(run.id)} data-testid={`remove-run-btn-${run.id}`}>
+                              Archive
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {showTemplateForm && (
+              <div className="template-form" data-testid="template-form">
+                <form onSubmit={handleTemplateFormSubmit}>
+                  <div className="form-group">
+                    <label htmlFor="template-name">Template Name</label>
+                    <input
+                      id="template-name"
+                      type="text"
+                      value={templateFormData.name}
+                      onChange={(e) => handleTemplateFormChange('name', e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="template-category">Base Category</label>
+                    <select
+                      id="template-category"
+                      value={templateFormData.categoryKey}
+                      onChange={(e) => handleTemplateFormChange('categoryKey', e.target.value)}
+                      required
+                    >
+                      <option value="">Select category</option>
+                      {baseCategoryKeys.map(key => (
+                        <option key={key} value={key}>{checklistData[key]?.name || key}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="template-frequency">Frequency</label>
+                    <select
+                      id="template-frequency"
+                      value={templateFormData.frequency}
+                      onChange={(e) => handleTemplateFormChange('frequency', e.target.value)}
+                      required
+                    >
+                      {frequencyOptions.map(option => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="template-due">Next Due Date</label>
+                    <input
+                      id="template-due"
+                      type="date"
+                      value={templateFormData.targetDueDate}
+                      onChange={(e) => handleTemplateFormChange('targetDueDate', e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="template-lead">Clone Lead (days before due)</label>
+                    <input
+                      id="template-lead"
+                      type="number"
+                      min="0"
+                      value={templateFormData.dueLeadDays}
+                      onChange={(e) => handleTemplateFormChange('dueLeadDays', e.target.value)}
+                    />
+                  </div>
+                  <div className="form-actions">
+                    <button type="button" className="btn btn-secondary" onClick={() => { setShowTemplateForm(false); resetTemplateFormState(); }} data-testid="cancel-template-btn">
+                      Cancel
+                    </button>
+                    <button type="submit" className="btn btn-primary" data-testid="save-template-btn">
+                      Save Template
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {currentCategory && (
         <div className="checklist-section" data-testid="checklist-section">
           <div className="checklist-header">
@@ -670,6 +1456,11 @@ function App() {
               </div>
               <span className="progress-text" data-testid="progress-text">Progress: {getProgress()}%</span>
             </div>
+            {currentRunMeta?.dueDate && (
+              <div className={`due-banner ${currentRunOverdue ? 'overdue' : ''}`} data-testid="due-banner">
+                Due by {formatDateForDisplay(currentRunMeta.dueDate)}
+              </div>
+            )}
           </div>
 
           <div className="checklist-items" data-testid="checklist-items">
@@ -683,8 +1474,8 @@ function App() {
                 <input
                   type="checkbox"
                   id={`item-${index}`}
-                  checked={checkedItems[item] || false}
-                  onChange={(e) => handleCheckboxChange(item, e.target.checked)}
+                  checked={isItemChecked(currentCategory, item)}
+                  onChange={(e) => handleCheckboxChange(currentCategory, item, e.target.checked)}
                   data-testid={`checklist-checkbox-${index}`}
                 />
                 <label htmlFor={`item-${index}`} data-testid={`checklist-label-${index}`}>{item}</label>
@@ -913,7 +1704,7 @@ function App() {
                     <div className="category-breakdown">
                       {Object.keys(checklistData).map(categoryKey => {
                         const category = checklistData[categoryKey];
-                        const completedInCategory = category.items.filter(item => checkedItems[item]).length;
+                        const completedInCategory = category.items.filter(item => isItemChecked(categoryKey, item)).length;
                         const categoryTime = categoryTimeTracking[categoryKey] || 0;
                         return (
                           <div key={categoryKey} className="category-metric">
